@@ -1,0 +1,41 @@
+# 服务端口的配置
+server:
+  port: 8080
+  tomcat:
+    threads:
+      max: 200 # Tomcat服务器最大线程请求数
+      min-spare: 10
+
+# Spring Boot 配置
+spring:
+  application:
+    name: seckill-system
+
+  # 数据库连接配置项
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/seckill_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    username: root
+    password: ${DB_PASSWORD:123456}
+    hikari:
+      maximum-pool-size: 20 # 设置远超MQ队列的连接数，保证随时能用
+      minimum-idle: 10
+
+  #保证每一次测试时的数据都是干净的
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true
+
+  mybatis-plus:
+    configuration:
+      map-underscore-to-camel-case: true
+    mapper-locations: classpath:/mapper/*.xml
+      # configuration:
+      # Recommend closing SQL log printing during stress testing, otherwise console IO will slow down
+    # If you want to see logs, keep this line; if pursuing extreme performance, comment out or set to null
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    global-config:
+      db-config:
+        id-type: auto
