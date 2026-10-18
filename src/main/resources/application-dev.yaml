@@ -16,18 +16,19 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/seckill_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
     username: root
-    password: ${DB_PASSWORD:123456}
+    password: ${DB_PASSWORD:}
     hikari:
       maximum-pool-size: 20 # 设置远超MQ队列的连接数，保证随时能用
       minimum-idle: 10
 
-  #保证每一次测试时的数据都是干净的
+  # 保证每一次测试时的数据都是干净的
   sql:
     init:
       mode: always
       schema-locations: classpath:schema.sql
       continue-on-error: true
 
+  # mybatis的基础配置
   mybatis-plus:
     configuration:
       map-underscore-to-camel-case: true
@@ -37,6 +38,18 @@ spring:
     global-config:
       db-config:
         id-type: auto
+
+  # Redis的基础配置
+  redis:
+    host: localhost
+    port: 6379
+    password: ${REDIS_PASSWORD:}
+    # 增加连接数，防止1000次左右的秒杀压垮数据库
+    lettuce:
+      pool:
+        max-active: 100
+        max-idle: 20
+        min-idle: 5
 
 # 输出日志的信息到控制台
 logging:

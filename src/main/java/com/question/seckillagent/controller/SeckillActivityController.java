@@ -38,4 +38,11 @@ public class SeckillActivityController {
         seckillActivityService.create(activity);
         return Result.success();
     }
+
+    @PostMapping("/publish/{id}")
+    public Result<Void> publish(@PathVariable Long id){
+        log.info("发布秒杀活动，预热库存：ID={}", id);
+        seckillActivityService.publish(id);
+        return Result.success();
+    }
 }

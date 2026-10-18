@@ -10,4 +10,6 @@ public interface SeckillActivityService {
     SeckillActivity getById(Long id);
 
     void create(SeckillActivity activity);
+
+    void publish(Long id);
 }
