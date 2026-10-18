@@ -8,4 +8,6 @@ public interface SeckillActivityService {
     List<SeckillActivity> list();
 
     SeckillActivity getById(Long id);
+
+    void create(SeckillActivity activity);
 }

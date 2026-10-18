@@ -4,10 +4,7 @@ import com.question.seckillagent.common.Result;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.service.SeckillActivityService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -33,5 +30,12 @@ public class SeckillActivityController {
     public Result<SeckillActivity> detail(@PathVariable Long id){
         log.info("根据id查询商品详细：{}", id);
         return Result.success(seckillActivityService.getById(id));
+    }
+
+    @PostMapping
+    public Result<Void> create(@RequestBody SeckillActivity activity){
+        log.info("创建秒杀活动，名字={}，商品ID={}", activity.getName(), activity.getProductId());
+        seckillActivityService.create(activity);
+        return Result.success();
     }
 }

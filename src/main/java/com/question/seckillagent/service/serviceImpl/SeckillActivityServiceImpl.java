@@ -24,4 +24,9 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
     public SeckillActivity getById(Long id) {
         return seckillActivityMapper.selectById(id);
     }
+
+    @Override
+    public void create(SeckillActivity activity) {
+        seckillActivityMapper.insert(activity);
+    }
 }
