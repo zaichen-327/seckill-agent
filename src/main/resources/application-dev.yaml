@@ -32,10 +32,18 @@ spring:
     configuration:
       map-underscore-to-camel-case: true
     mapper-locations: classpath:/mapper/*.xml
-      # configuration:
-      # Recommend closing SQL log printing during stress testing, otherwise console IO will slow down
-    # If you want to see logs, keep this line; if pursuing extreme performance, comment out or set to null
+    # sql语句的拼接在控制带输出
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     global-config:
       db-config:
         id-type: auto
+
+# 输出日志的信息到控制台
+logging:
+  level:
+    com:
+      question:
+        seckillagent:
+          mapper: debug
+          service: info
+          controller: info

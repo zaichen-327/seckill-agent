@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface SeckillActivityService {
     List<SeckillActivity> list();
+
+    SeckillActivity getById(Long id);
 }

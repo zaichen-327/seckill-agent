@@ -15,9 +15,13 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
         this.seckillActivityMapper = seckillActivityMapper;
     }
 
-
     @Override
     public List<SeckillActivity> list() {
         return seckillActivityMapper.selectList(null);
+    }
+
+    @Override
+    public SeckillActivity getById(Long id) {
+        return seckillActivityMapper.selectById(id);
     }
 }
