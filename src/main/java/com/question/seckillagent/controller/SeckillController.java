@@ -28,4 +28,10 @@ public class SeckillController {
         log.info("获取秒杀token，activityID={}", activityId);
         return Result.success(seckillService.generateToken(activityId, verifyCode));
     }
+
+    @PostMapping("/doSeckill/{activityId}/{token}")
+    public Result<Void> doSeckill(@PathVariable Long activityId, @PathVariable String token, @RequestParam Long userId){
+        seckillService.doSeckill(activityId,token,userId);
+        return Result.success();
+    }
 }
