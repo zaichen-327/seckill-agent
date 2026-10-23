@@ -4,9 +4,12 @@ import com.question.seckillagent.exception.BusinessException;
 import com.question.seckillagent.service.SeckillService;
 import com.wf.captcha.ArithmeticCaptcha;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -15,9 +18,13 @@ import java.util.concurrent.TimeUnit;
 public class SeckillServiceImpl implements SeckillService {
 
     private final StringRedisTemplate stringRedisTemplate;
+    private final DefaultRedisScript<Long> seckillScript;
 
     public SeckillServiceImpl(StringRedisTemplate stringRedisTemplate){
         this.stringRedisTemplate = stringRedisTemplate;
+        this.seckillScript = new DefaultRedisScript<>();
+        this.seckillScript.setLocation(new ClassPathResource("lua/seckill.lua"));
+        this.seckillScript.setResultType(Long.class);
     }
 
     @Override
@@ -40,5 +47,12 @@ public class SeckillServiceImpl implements SeckillService {
         stringRedisTemplate.opsForValue().set("seckill:token:" + activityId, token, 60, TimeUnit.SECONDS);
         log.info("生成秒杀token，activityId={}", activityId);
         return token;
+    }
+
+    @Override
+    public Long stockDeduct(Long activityId) {
+        Long result = stringRedisTemplate.execute(seckillScript, Collections.singletonList("seckill:stock:" + activityId));
+        log.info("Lua原子扣库存，activityId = {}，返回值 = {}", activityId, result);
+        return result;
     }
 }
