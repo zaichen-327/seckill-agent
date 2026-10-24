@@ -1,19 +1,25 @@
 package com.question.seckillagent.service.serviceImpl;
 
+import com.question.seckillagent.config.RabbitMQConfig;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
 import com.question.seckillagent.exception.BusinessException;
 import com.question.seckillagent.mapper.SeckillActivityMapper;
 import com.question.seckillagent.mapper.SeckillOrderMapper;
+import com.question.seckillagent.mq.SeckillMessage;
 import com.question.seckillagent.service.SeckillService;
 import com.wf.captcha.ArithmeticCaptcha;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
@@ -26,15 +32,42 @@ public class SeckillServiceImpl implements SeckillService {
     private final StringRedisTemplate stringRedisTemplate;
     private final DefaultRedisScript<Long> seckillScript;
     private final SeckillActivityMapper seckillActivityMapper;
-    private final SeckillOrderMapper seckillOrderMapper;
+    private final RabbitTemplate rabbitTemplate;
 
-    public SeckillServiceImpl(StringRedisTemplate stringRedisTemplate, SeckillActivityMapper seckillActivityMapper, SeckillOrderMapper seckillOrderMapper){
+    public SeckillServiceImpl(StringRedisTemplate stringRedisTemplate, SeckillActivityMapper seckillActivityMapper, RabbitTemplate rabbitTemplate){
         this.stringRedisTemplate = stringRedisTemplate;
         this.seckillActivityMapper = seckillActivityMapper;
-        this.seckillOrderMapper = seckillOrderMapper;
+        this.rabbitTemplate = rabbitTemplate;
         this.seckillScript = new DefaultRedisScript<>();
         this.seckillScript.setLocation(new ClassPathResource("lua/seckill.lua"));
         this.seckillScript.setResultType(Long.class);
+    }
+
+    @PostConstruct
+    public void initRabbitCallbacks() {
+        // 消息没被交换机确认收到：说明没发出去，回补库存
+        rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
+            if (!ack) {
+                log.error("消息未被确认，correlationData={}，原因={}",
+                        correlationData == null ? null : correlationData.getId(), cause);
+                rollbackStock(correlationData == null ? null : correlationData.getId());
+            }
+        });
+        // 消息到了交换机但路由不到队列：被退回，同样回补库存
+        rabbitTemplate.setReturnsCallback(returned -> {
+            log.error("消息被退回，exchange={}，routingKey={}，replyText={}",
+                    returned.getExchange(), returned.getRoutingKey(), returned.getReplyText());
+            rollbackStock(returned.getMessage().getMessageProperties().getCorrelationId());
+        });
+    }
+
+    private void rollbackStock(String correlationId) {
+        if (correlationId == null) {
+            return;
+        }
+        Long activityId = Long.valueOf(correlationId.split(":")[0]);
+        stringRedisTemplate.opsForValue().increment("seckill:stock:" + activityId);
+        log.warn("发送失败，库存已回补，activityId={}", activityId);
     }
 
     @Override
@@ -100,17 +133,24 @@ public class SeckillServiceImpl implements SeckillService {
             throw new BusinessException("已售罄");
         }
 
-        // 4. 插入订单：唯一键防重单，冲突时回补库存
-        SeckillOrder order = new SeckillOrder();
-        order.setActivityId(activityId);
-        order.setUserId(userId);
+        // 4. 发消息异步落单，热点路径到此结束
+        SeckillMessage message = new SeckillMessage(activityId, userId);
+        String correlationId = activityId + ":" + userId;
         try {
-            seckillOrderMapper.insert(order);
-        } catch (DuplicateKeyException e) {
-            stringRedisTemplate.opsForValue().increment("seckill:stock:" + activityId);
-            log.info("重复抢购拦截，activityId={}，userId={}，库存已回补", activityId, userId);
-            throw new BusinessException("您已秒杀成功，请勿重复抢购");
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE,
+                    RabbitMQConfig.ORDER_ROUTING_KEY,
+                    message,
+                    msg -> {
+                        msg.getMessageProperties().setCorrelationId(correlationId);
+                        return msg;
+                    },
+                    new CorrelationData(correlationId));
+        } catch (AmqpException e) {
+            log.error("消息发送失败，activityId={}，userId={}", activityId, userId, e);
+            rollbackStock(correlationId);
+            throw new BusinessException("秒杀太火爆了，请稍后再试");
         }
-        log.info("秒杀成功，activityId={}，userId={}", activityId, userId);
+        log.info("秒杀请求已入队，activityId={}，userId={}", activityId, userId);
     }
 }

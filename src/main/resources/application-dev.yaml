@@ -51,6 +51,23 @@ spring:
         max-idle: 20
         min-idle: 5
 
+  # 消息队列的配置
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: seckill
+    password: ${RABBITMQ_PASSWORD:}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    # 允许路由失败的消息回退
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        default-requeue-rejected: false
+    # 不使用自动重连，因为有些错误消息无法通过框架自己变成JSON，从而无法进入死信队列
+
 # 输出日志的信息到控制台
 logging:
   level:
