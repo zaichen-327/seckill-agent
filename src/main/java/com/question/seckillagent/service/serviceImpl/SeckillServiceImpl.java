@@ -1,5 +1,6 @@
 package com.question.seckillagent.service.serviceImpl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.question.seckillagent.config.RabbitMQConfig;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
@@ -33,11 +34,13 @@ public class SeckillServiceImpl implements SeckillService {
     private final DefaultRedisScript<Long> seckillScript;
     private final SeckillActivityMapper seckillActivityMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final SeckillOrderMapper seckillOrderMapper;
 
-    public SeckillServiceImpl(StringRedisTemplate stringRedisTemplate, SeckillActivityMapper seckillActivityMapper, RabbitTemplate rabbitTemplate){
+    public SeckillServiceImpl(StringRedisTemplate stringRedisTemplate, SeckillActivityMapper seckillActivityMapper, RabbitTemplate rabbitTemplate, SeckillOrderMapper seckillOrderMapper){
         this.stringRedisTemplate = stringRedisTemplate;
         this.seckillActivityMapper = seckillActivityMapper;
         this.rabbitTemplate = rabbitTemplate;
+        this.seckillOrderMapper = seckillOrderMapper;
         this.seckillScript = new DefaultRedisScript<>();
         this.seckillScript.setLocation(new ClassPathResource("lua/seckill.lua"));
         this.seckillScript.setResultType(Long.class);
@@ -99,8 +102,21 @@ public class SeckillServiceImpl implements SeckillService {
         return result;
     }
 
+    private void checkRateLimit(Long activityId, Long userId){
+        String key = "seckill:limit:" + activityId + ":" + userId;
+        Long count = stringRedisTemplate.opsForValue().increment(key);
+        if(count != null && count == 1){
+            stringRedisTemplate.expire(key, 60, TimeUnit.SECONDS);
+        }
+        if(count != null && count > 10){
+            throw new BusinessException("操作过于频繁，请稍后再试");
+        }
+    }
+
     @Override
     public void doSeckill(Long activityId, String token, Long userId) {
+        // 直接在源头进行脚本刷单检测，如果是机器刷单，直接略过token检验这一部分，拒绝刷单请求
+        checkRateLimit(activityId, userId);
         // 1. 校验token：先删后用，防重放
         String tokenKey = "seckill:token:" + activityId;
         String savedToken = stringRedisTemplate.opsForValue().get(tokenKey);
@@ -152,5 +168,25 @@ public class SeckillServiceImpl implements SeckillService {
             throw new BusinessException("秒杀太火爆了，请稍后再试");
         }
         log.info("秒杀请求已入队，activityId={}，userId={}", activityId, userId);
+    }
+
+    @Override
+    public String getSeckillResult(Long activityId, Long userId) {
+        // 1. 先查订单：有订单 = 秒杀成功
+        QueryWrapper<SeckillOrder> wrapper = new QueryWrapper<>();
+        wrapper.eq("activity_id", activityId).eq("user_id", userId);
+        SeckillOrder order = seckillOrderMapper.selectOne(wrapper);
+        if (order != null) {
+            return "秒杀成功";
+        }
+        // 2. 再看库存：还有库存 = 还在排队；库存空了 = 已售罄
+        String stock = stringRedisTemplate.opsForValue().get("seckill:stock:" + activityId);
+        if (stock == null) {
+            return "活动未开始";
+        }
+        if (Long.parseLong(stock) > 0) {
+            return "排队中";
+        }
+        return "已售罄";
     }
 }

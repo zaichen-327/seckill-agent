@@ -34,4 +34,10 @@ public class SeckillController {
         seckillService.doSeckill(activityId,token,userId);
         return Result.success();
     }
+
+    @GetMapping("/result/{activityId}")
+    public Result<String> getSeckillResult(@PathVariable Long activityId, @RequestParam Long userId){
+        log.info("查询秒杀结果，activityId={}，userId={}", activityId, userId);
+        return Result.success(seckillService.getSeckillResult(activityId,userId));
+    }
 }

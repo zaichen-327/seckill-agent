@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SeckillActivityServiceImpl implements SeckillActivityService {
@@ -26,7 +27,12 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
 
     @Override
     public SeckillActivity getById(Long id) {
-        return seckillActivityMapper.selectById(id);
+        //在接口调用成功但是无法返回数据时把信息返回前端，避免活动不存在却返回成功调用的逻辑
+        SeckillActivity activity = seckillActivityMapper.selectById(id);
+        if(activity == null){
+            throw new BusinessException("活动不存在");
+        }
+        return activity;
     }
 
     @Override

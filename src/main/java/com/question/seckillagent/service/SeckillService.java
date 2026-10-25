@@ -8,4 +8,6 @@ public interface SeckillService {
     Long stockDeduct(Long activityId);
 
     void doSeckill(Long activityId, String token, Long userId);
+
+    String getSeckillResult(Long activityId, Long userId);
 }
