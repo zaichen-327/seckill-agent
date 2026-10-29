@@ -1,9 +1,11 @@
 package com.question.seckillagent.service;
 
-public interface SeckillService {
-    String generateCaptcha(Long activityId);
+import java.util.Map;
 
-    String generateToken(Long activityId, String verifyCode);
+public interface SeckillService {
+    Map<String, String> generateCaptcha(Long activityId);
+
+    String generateToken(Long activityId,String captchaId, String verifyCode);
 
     Long stockDeduct(Long activityId);
 

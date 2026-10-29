@@ -22,8 +22,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -74,23 +73,27 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
     @Override
-    public String generateCaptcha(Long activityId) {
+    public Map<String, String> generateCaptcha(Long activityId) {
         ArithmeticCaptcha captcha = new ArithmeticCaptcha(130, 48, 2);
         String answer = captcha.text();
-        stringRedisTemplate.opsForValue().set("seckill:captcha:" + activityId, answer, 120, TimeUnit.SECONDS);
-        log.info("生成验证码，activityID={}，答案已经存入Redis", activityId);
-        return captcha.toBase64();
+        String captchaId = UUID.randomUUID().toString().replace("-","");
+        stringRedisTemplate.opsForValue().set("seckill:captcha:" + captchaId, answer, 600, TimeUnit.SECONDS);
+        log.info("生成验证码，captchaId={}，答案已经存入Redis", captchaId);
+        Map<String, String> result = new HashMap<>();
+        result.put("captchaId", captchaId);
+        result.put("image", captcha.toBase64());
+        return result;
     }
 
     @Override
-    public String generateToken(Long activityId, String verifyCode) {
-        String answer = stringRedisTemplate.opsForValue().get("seckill:captcha:" + activityId);
+    public String generateToken(Long activityId, String captchaId, String verifyCode) {
+        String answer = stringRedisTemplate.opsForValue().get("seckill:captcha:" + captchaId);
         if(answer == null || !answer.equals(verifyCode.trim())){
             throw new BusinessException("验证码错误");
         }
-        stringRedisTemplate.delete("seckill:captcha:" + activityId);
+        stringRedisTemplate.delete("seckill:captcha:" + captchaId);
         String token = UUID.randomUUID().toString().replace("-", "");
-        stringRedisTemplate.opsForValue().set("seckill:token:" + activityId, token, 60, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set("seckill:token:" + activityId, token, 600, TimeUnit.SECONDS);
         log.info("生成秒杀token，activityId={}", activityId);
         return token;
     }
