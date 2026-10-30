@@ -33,6 +33,7 @@ public class SeckillController {
 
     @PostMapping("/doSeckill/{activityId}/{token}")
     public Result<Void> doSeckill(@PathVariable Long activityId, @PathVariable String token, @RequestParam Long userId){
+        log.info("秒杀请求，activityId={}，userId={}", activityId, userId);
         seckillService.doSeckill(activityId,token,userId);
         return Result.success();
     }
