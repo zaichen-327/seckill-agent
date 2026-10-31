@@ -1,6 +1,7 @@
 package com.question.seckillagent.controller;
 
 import com.question.seckillagent.common.Result;
+import com.question.seckillagent.context.UserContext;
 import com.question.seckillagent.service.SeckillService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +33,16 @@ public class SeckillController {
     }
 
     @PostMapping("/doSeckill/{activityId}/{token}")
-    public Result<Void> doSeckill(@PathVariable Long activityId, @PathVariable String token, @RequestParam Long userId){
+    public Result<Void> doSeckill(@PathVariable Long activityId, @PathVariable String token){
+        Long userId = UserContext.getUserId();
         log.info("秒杀请求，activityId={}，userId={}", activityId, userId);
         seckillService.doSeckill(activityId,token,userId);
         return Result.success();
     }
 
     @GetMapping("/result/{activityId}")
-    public Result<String> getSeckillResult(@PathVariable Long activityId, @RequestParam Long userId){
+    public Result<String> getSeckillResult(@PathVariable Long activityId){
+        Long userId = UserContext.getUserId();
         log.info("查询秒杀结果，activityId={}，userId={}", activityId, userId);
         return Result.success(seckillService.getSeckillResult(activityId,userId));
     }

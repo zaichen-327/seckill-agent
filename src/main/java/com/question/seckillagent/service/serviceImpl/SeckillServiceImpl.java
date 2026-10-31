@@ -74,6 +74,7 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Override
     public Map<String, String> generateCaptcha(Long activityId) {
+        getActivityOrThrow(activityId);
         ArithmeticCaptcha captcha = new ArithmeticCaptcha(130, 48, 2);
         String answer = captcha.text();
         String captchaId = UUID.randomUUID().toString().replace("-","");
@@ -87,6 +88,7 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Override
     public String generateToken(Long activityId, String captchaId, String verifyCode) {
+        getActivityOrThrow(activityId);
         String answer = stringRedisTemplate.opsForValue().get("seckill:captcha:" + captchaId);
         if(answer == null || !answer.equals(verifyCode.trim())){
             throw new BusinessException("验证码错误");
@@ -129,10 +131,7 @@ public class SeckillServiceImpl implements SeckillService {
         stringRedisTemplate.delete(tokenKey);
 
         // 2. 校验活动时间窗
-        SeckillActivity activity = seckillActivityMapper.selectById(activityId);
-        if (activity == null) {
-            throw new BusinessException("活动不存在");
-        }
+        SeckillActivity activity = getActivityOrThrow(activityId);
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(activity.getStartTime())) {
             throw new BusinessException("活动未开始");
@@ -191,5 +190,13 @@ public class SeckillServiceImpl implements SeckillService {
             return "排队中";
         }
         return "已售罄";
+    }
+
+    private SeckillActivity getActivityOrThrow(Long activityId){
+        SeckillActivity activity = seckillActivityMapper.selectById(activityId);
+        if(activity == null){
+            throw new BusinessException("活动不存在");
+        }
+        return activity;
     }
 }
