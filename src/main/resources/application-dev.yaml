@@ -51,6 +51,11 @@ spring:
         max-idle: 20
         min-idle: 5
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+
   # 消息队列的配置
   rabbitmq:
     host: 127.0.0.1
@@ -77,3 +82,7 @@ logging:
           mapper: debug
           service: info
           controller: info
+
+jwt:
+  secret: ${JWT_SECRET:seckill-agent-secret-key}
+  expire: 86400000

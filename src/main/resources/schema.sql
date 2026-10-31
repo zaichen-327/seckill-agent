@@ -25,7 +25,14 @@ CREATE TABLE IF NOT EXISTS seckill_order (
     # 避免联合索引时，会因为找不到而查找全表，通过使用维护索引的微小成本来降低大批量sql的请求
     KEY 'idx_activity_id' ('activity_id'),
     UNIQUE KEY uk_user_activity (user_id, activity_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS seckill_user (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
+    password_hash VARCHAR(100) NOT NULL COMMENT 'BCrypt加密后的密码',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO seckill_activity (id, name, product_id, original_price, seckill_price, initial_stock, available_stock, start_time, end_time)
 VALUES (1, 'iPhone 15 Pro', 1001, 9999.00, 4999.00, 100, 100, DATE_ADD(NOW(), INTERVAL 1 HOUR), DATE_ADD(NOW(), INTERVAL 25 HOUR));
