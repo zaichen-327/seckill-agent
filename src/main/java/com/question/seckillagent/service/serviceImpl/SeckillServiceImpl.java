@@ -87,7 +87,7 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
     @Override
-    public String generateToken(Long activityId, String captchaId, String verifyCode) {
+    public String generateToken(Long activityId, String captchaId, String verifyCode, Long userId) {
         getActivityOrThrow(activityId);
         String answer = stringRedisTemplate.opsForValue().get("seckill:captcha:" + captchaId);
         if(answer == null || !answer.equals(verifyCode.trim())){
@@ -95,7 +95,7 @@ public class SeckillServiceImpl implements SeckillService {
         }
         stringRedisTemplate.delete("seckill:captcha:" + captchaId);
         String token = UUID.randomUUID().toString().replace("-", "");
-        stringRedisTemplate.opsForValue().set("seckill:token:" + activityId, token, 600, TimeUnit.SECONDS);
+        stringRedisTemplate.opsForValue().set("seckill:token:" + activityId + ":" + userId, token, 600, TimeUnit.SECONDS);
         log.info("生成秒杀token，activityId={}", activityId);
         return token;
     }
@@ -123,7 +123,7 @@ public class SeckillServiceImpl implements SeckillService {
         // 直接在源头进行脚本刷单检测，如果是机器刷单，直接略过token检验这一部分，拒绝刷单请求
         checkRateLimit(activityId, userId);
         // 1. 校验token：先删后用，防重放
-        String tokenKey = "seckill:token:" + activityId;
+        String tokenKey = "seckill:token:" + activityId + ":" + userId;
         String savedToken = stringRedisTemplate.opsForValue().get(tokenKey);
         if (savedToken == null || !savedToken.equals(token)) {
             throw new BusinessException("token无效或已过期");

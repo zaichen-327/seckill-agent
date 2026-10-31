@@ -5,7 +5,7 @@ import java.util.Map;
 public interface SeckillService {
     Map<String, String> generateCaptcha(Long activityId);
 
-    String generateToken(Long activityId,String captchaId, String verifyCode);
+    String generateToken(Long activityId,String captchaId, String verifyCode, Long userId);
 
     Long stockDeduct(Long activityId);
 

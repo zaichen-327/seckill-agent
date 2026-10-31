@@ -28,8 +28,9 @@ public class SeckillController {
     //校验验证码，校验之后，生成一个token来隐藏秒杀地址，第二层防刷
     @GetMapping("/token/{activityId}")
     public Result<String> token(@PathVariable Long activityId, @RequestParam String captchaId, @RequestParam String verifyCode){
-        log.info("获取秒杀token，activityID={}", activityId);
-        return Result.success(seckillService.generateToken(activityId, captchaId, verifyCode));
+        Long userId = UserContext.getUserId();
+        log.info("获取秒杀token，activityID={}，userId={}", activityId, userId);
+        return Result.success(seckillService.generateToken(activityId, captchaId, verifyCode, userId));
     }
 
     @PostMapping("/doSeckill/{activityId}/{token}")
