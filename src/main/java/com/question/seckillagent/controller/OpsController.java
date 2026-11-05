@@ -1,6 +1,7 @@
 package com.question.seckillagent.controller;
 
 import com.question.seckillagent.common.Result;
+import com.question.seckillagent.dto.ops.OpsActivityDTO;
 import com.question.seckillagent.dto.ops.OpsMetricsDTO;
 import com.question.seckillagent.service.OpsMetricsService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -25,5 +28,11 @@ public class OpsController {
     public Result<OpsMetricsDTO> metrics() {
         log.info("Agent 拉取运维指标");
         return Result.success(opsMetricsService.getMetrics());
+    }
+
+    @GetMapping("/activities")
+    public Result<List<OpsActivityDTO>> listActivities(){
+        log.info("查询活动列表");
+        return Result.success(opsMetricsService.listActivities());
     }
 }

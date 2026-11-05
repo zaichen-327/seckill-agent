@@ -1,6 +1,7 @@
 package com.question.seckillagent.service.serviceImpl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.question.seckillagent.dto.ops.OpsActivityDTO;
 import com.question.seckillagent.dto.ops.OpsMetricsDTO;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
@@ -42,6 +43,39 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
         return dto;
     }
 
+    @Override
+    public List<OpsActivityDTO> listActivities() {
+        List<SeckillActivity> activities = activityMapper.selectList(null);
+        List<OpsActivityDTO> result = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (SeckillActivity activity : activities) {
+            OpsActivityDTO dto = new OpsActivityDTO();
+            dto.setId(activity.getId());
+            dto.setName(activity.getName());
+            dto.setProductId(activity.getProductId());
+            dto.setSeckillPrice(activity.getSeckillPrice());
+            dto.setOriginalPrice(activity.getOriginalPrice());
+            dto.setInitialStock(activity.getInitialStock());
+            dto.setAvailableStock(activity.getAvailableStock());
+            dto.setStartTime(activity.getStartTime());
+            dto.setEndTime(activity.getEndTime());
+            dto.setStatus(getActivityStatus(activity, now));
+            result.add(dto);
+        }
+        log.info("查询活动列表，共 {} 个活动", result.size());
+        return result;
+    }
+
+    private String getActivityStatus(SeckillActivity activity, LocalDateTime now) {
+        if (now.isBefore(activity.getStartTime())) {
+            return "NOT_STARTED";
+        } else if (now.isAfter(activity.getEndTime())) {
+            return "ENDED";
+        } else {
+            return "RUNNING";
+        }
+    }
+
     private List<OpsMetricsDTO.ActivityMetrics> buildActivityMetrics() {
         List<SeckillActivity> activities = activityMapper.selectList(null);
         if (activities.isEmpty()) {
@@ -64,13 +98,7 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
             m.setName(a.getName());
             m.setStartTime(a.getStartTime());
             m.setEndTime(a.getEndTime());
-            if (now.isBefore(a.getStartTime())) {
-                m.setStatus("NOT_STARTED");
-            } else if (now.isAfter(a.getEndTime())) {
-                m.setStatus("ENDED");
-            } else {
-                m.setStatus("RUNNING");
-            }
+            m.setStatus(getActivityStatus(a, now));
             m.setRedisStock(stockMap.get(a.getId())); // null = 未预热/读不到
             m.setDbOrderCount(orderCountMap.getOrDefault(a.getId(), 0L));
             result.add(m);
