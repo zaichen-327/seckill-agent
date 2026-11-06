@@ -3,11 +3,13 @@ package com.question.seckillagent.controller;
 import com.question.seckillagent.common.Result;
 import com.question.seckillagent.dto.ops.OpsActivityDTO;
 import com.question.seckillagent.dto.ops.OpsMetricsDTO;
+import com.question.seckillagent.dto.ops.OpsOrderDTO;
 import com.question.seckillagent.service.OpsMetricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -34,5 +36,13 @@ public class OpsController {
     public Result<List<OpsActivityDTO>> listActivities(){
         log.info("查询活动列表");
         return Result.success(opsMetricsService.listActivities());
+    }
+
+    @GetMapping("/orders")
+    public Result<List<OpsOrderDTO>> listResult(
+            @RequestParam(required = false) Long activityId,
+            @RequestParam(defaultValue = "20") Integer limit){
+        log.info("查询最近订单，activityId = {}。limit = {}", activityId, limit);
+        return Result.success(opsMetricsService.listRecentOrders(activityId, limit));
     }
 }

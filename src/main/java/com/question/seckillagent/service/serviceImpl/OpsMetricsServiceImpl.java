@@ -3,6 +3,7 @@ package com.question.seckillagent.service.serviceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.question.seckillagent.dto.ops.OpsActivityDTO;
 import com.question.seckillagent.dto.ops.OpsMetricsDTO;
+import com.question.seckillagent.dto.ops.OpsOrderDTO;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
 import com.question.seckillagent.mapper.SeckillActivityMapper;
@@ -27,8 +28,8 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
     private static final String ORDER_QUEUE = "seckill.order.queue";
     private static final String ORDER_DLQ = "seckill.order.dlq";
 
-    private final SeckillActivityMapper activityMapper;
-    private final SeckillOrderMapper orderMapper;
+    private final SeckillActivityMapper seckillActivityMapper;
+    private final SeckillOrderMapper seckillOrderMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final AmqpAdmin amqpAdmin;
 
@@ -45,7 +46,7 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
 
     @Override
     public List<OpsActivityDTO> listActivities() {
-        List<SeckillActivity> activities = activityMapper.selectList(null);
+        List<SeckillActivity> activities = seckillActivityMapper.selectList(null);
         List<OpsActivityDTO> result = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
         for (SeckillActivity activity : activities) {
@@ -66,6 +67,31 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
         return result;
     }
 
+    @Override
+    public List<OpsOrderDTO> listRecentOrders(Long activityId, Integer limit) {
+        if (limit == null || limit <= 0 || limit > 100) {
+            limit = 20;
+        }
+        QueryWrapper<SeckillOrder> wrapper = new QueryWrapper<>();
+        if (activityId != null) {
+            wrapper.eq("activity_id", activityId);
+        }
+        wrapper.orderByDesc("create_time");
+        wrapper.last("LIMIT " + limit);
+        List<SeckillOrder> orders = seckillOrderMapper.selectList(wrapper);
+        List<OpsOrderDTO> result = new ArrayList<>();
+        for (SeckillOrder order : orders) {
+            OpsOrderDTO dto = new OpsOrderDTO();
+            dto.setId(order.getId());
+            dto.setUserId(order.getUserId());
+            dto.setActivityId(order.getActivityId());
+            dto.setCreateTime(order.getCreateTime());
+            result.add(dto);
+        }
+        log.info("查询最近订单，共 {} 条", result.size());
+        return result;
+    }
+
     private String getActivityStatus(SeckillActivity activity, LocalDateTime now) {
         if (now.isBefore(activity.getStartTime())) {
             return "NOT_STARTED";
@@ -77,7 +103,7 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
     }
 
     private List<OpsMetricsDTO.ActivityMetrics> buildActivityMetrics() {
-        List<SeckillActivity> activities = activityMapper.selectList(null);
+        List<SeckillActivity> activities = seckillActivityMapper.selectList(null);
         if (activities.isEmpty()) {
             return Collections.emptyList();
         }
@@ -111,7 +137,7 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
      * FROM seckill_order WHERE activity_id IN (...) GROUP BY activity_id
      */
     private Map<Long, Long> batchCountOrders(List<Long> activityIds) {
-        List<Map<String, Object>> rows = orderMapper.selectMaps(new QueryWrapper<SeckillOrder>()
+        List<Map<String, Object>> rows = seckillOrderMapper.selectMaps(new QueryWrapper<SeckillOrder>()
                 .select("activity_id", "COUNT(*) AS cnt")
                 .in("activity_id", activityIds)
                 .groupBy("activity_id"));
