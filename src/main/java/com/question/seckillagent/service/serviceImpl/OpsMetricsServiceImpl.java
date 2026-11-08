@@ -1,11 +1,10 @@
 package com.question.seckillagent.service.serviceImpl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.question.seckillagent.dto.ops.OpsActivityDTO;
-import com.question.seckillagent.dto.ops.OpsMetricsDTO;
-import com.question.seckillagent.dto.ops.OpsOrderDTO;
+import com.question.seckillagent.dto.ops.*;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
+import com.question.seckillagent.exception.BusinessException;
 import com.question.seckillagent.mapper.SeckillActivityMapper;
 import com.question.seckillagent.mapper.SeckillOrderMapper;
 import com.question.seckillagent.service.OpsMetricsService;
@@ -89,6 +88,30 @@ public class OpsMetricsServiceImpl implements OpsMetricsService {
             result.add(dto);
         }
         log.info("查询最近订单，共 {} 条", result.size());
+        return result;
+    }
+
+    @Override
+    public OpsPublishResultDTO publishActivity(Long activityId, OpsPublishRequest request) {
+        if (request == null || !Boolean.TRUE.equals(request.getConfirm())) {
+            log.warn("发布未确认，activityId={}", activityId);
+            throw new BusinessException("请先确认发布");
+        }
+        SeckillActivity activity = seckillActivityMapper.selectById(activityId);
+        if (activity == null) {
+            throw new BusinessException("活动不存在");
+        }
+        String stockKey = "seckill:stock:" + activityId;
+        if (stringRedisTemplate.hasKey(stockKey)) {
+            log.warn("活动已发布，activityId={}", activityId);
+            throw new BusinessException("活动已发布");
+        }
+        stringRedisTemplate.opsForValue().set(stockKey, String.valueOf(activity.getAvailableStock()));
+        log.info("发布活动成功，activityId={}，库存={}", activityId, activity.getAvailableStock());
+        OpsPublishResultDTO result = new OpsPublishResultDTO();
+        result.setActivityId(activityId);
+        result.setStock(activity.getAvailableStock());
+        result.setStatus(getActivityStatus(activity, LocalDateTime.now()));
         return result;
     }
 

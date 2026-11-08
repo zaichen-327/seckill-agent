@@ -38,6 +38,9 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
     @Override
     public void create(SeckillActivity activity) {
         seckillActivityMapper.insert(activity);
+        // 测试环境都有，因为测试环境需要频繁重启测试新功能，测试活动基本都是发布在同一个id之下，所以要清除redis缓存
+        // 生产环境里面一般不会出现这个情况
+        stringRedisTemplate.delete("seckill:stock:" + activity.getId());
     }
 
     @Override

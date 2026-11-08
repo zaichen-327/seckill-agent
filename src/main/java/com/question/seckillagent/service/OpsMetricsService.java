@@ -1,8 +1,6 @@
 package com.question.seckillagent.service;
 
-import com.question.seckillagent.dto.ops.OpsActivityDTO;
-import com.question.seckillagent.dto.ops.OpsMetricsDTO;
-import com.question.seckillagent.dto.ops.OpsOrderDTO;
+import com.question.seckillagent.dto.ops.*;
 
 import java.util.List;
 
@@ -13,4 +11,6 @@ public interface OpsMetricsService {
     List<OpsActivityDTO> listActivities();
 
     List<OpsOrderDTO> listRecentOrders(Long activityId, Integer limit);
+
+    OpsPublishResultDTO publishActivity(Long activityId, OpsPublishRequest request);
 }

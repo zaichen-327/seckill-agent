@@ -1,16 +1,11 @@
 package com.question.seckillagent.controller;
 
 import com.question.seckillagent.common.Result;
-import com.question.seckillagent.dto.ops.OpsActivityDTO;
-import com.question.seckillagent.dto.ops.OpsMetricsDTO;
-import com.question.seckillagent.dto.ops.OpsOrderDTO;
+import com.question.seckillagent.dto.ops.*;
 import com.question.seckillagent.service.OpsMetricsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -44,5 +39,13 @@ public class OpsController {
             @RequestParam(defaultValue = "20") Integer limit){
         log.info("查询最近订单，activityId = {}。limit = {}", activityId, limit);
         return Result.success(opsMetricsService.listRecentOrders(activityId, limit));
+    }
+
+    @PostMapping("/activities/{id}/publish")
+    public Result<OpsPublishResultDTO> publishActivity(
+            @PathVariable("id") Long activityId,
+            @RequestBody(required = false) OpsPublishRequest request){
+        log.info("发布活动，activityId={}", activityId);
+        return Result.success(opsMetricsService.publishActivity(activityId, request));
     }
 }
