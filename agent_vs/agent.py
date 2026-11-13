@@ -67,7 +67,7 @@ TOOLS = [
 ]
 
 
-def run_agent(question, token):
+def run_agent(question, token, messages):
     def call_tool(name, args):
         if name == "get_metrics":
             return get_metrics(token)
@@ -83,11 +83,8 @@ def run_agent(question, token):
             return publish_activity(token, activity_id)
         return "未知工具：" + name
 
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": question},
-    ]
-
+    messages.append({"role": "user", "content": question})
+        
     for step in range(5):
         resp = client.chat.completions.create(
             model="deepseek-chat",
@@ -105,7 +102,10 @@ def run_agent(question, token):
             name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
             print(f"调用工具：{name}，参数：{args}")
-            result = call_tool(name, args)
+            try:
+                result = call_tool(name, args)
+            except Exception as e:
+                result = f"工具 {name} 调用失败：{e}"
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
@@ -121,6 +121,9 @@ if __name__ == "__main__":
     password = input("密码：")
     token = login(username, password)
     print("登录成功")
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+    ]
     while True:
         question = input("提问 Agent：")
         if question.strip()=="/exit":
@@ -128,4 +131,4 @@ if __name__ == "__main__":
             break
         if not question.strip():
             continue
-        run_agent(question, token)
+        run_agent(question, token, messages)
