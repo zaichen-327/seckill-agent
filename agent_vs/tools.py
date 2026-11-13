@@ -54,8 +54,24 @@ def get_orders(token, activity_id = None, limit = 20):
         raise Exception("查订单失败：" + data["message"])
     return data["data"]
 
+def publish_activity(token, activity_id):
+    """调 POST /ops/activities/publish，发布预热活动"""
+    print(f"发布活动 {activity_id}，请确认！")
+    resp = requests.post(
+        f"{BASE_URL}/ops/activities/{activity_id}/publish",
+        headers={"Authorization": "Bearer " + token},
+        json={"confirm": True},
+        timeout=10,
+    )
+    data = resp.json()
+    if data["code"] != 200:
+        raise Exception("发布活动失败：" + data["message"])
+    return data["data"]
+
 if __name__ == "__main__":
-    token = login("test1", "123456")
+    username = input("用户名：")
+    password = input("密码：")
+    token = login(username, password)
     print("登录成功，token 前 10 位：", token[:10])
     metrics = get_metrics(token)
     print(metrics)
