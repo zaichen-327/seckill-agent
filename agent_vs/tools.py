@@ -68,7 +68,7 @@ def publish_activity(token, activity_id):
         raise Exception("发布活动失败：" + data["message"])
     return data["data"]
 
-if __name__ == "__main__":
+""" if __name__ == "__main__":
     username = input("用户名：")
     password = input("密码：")
     token = login(username, password)
@@ -78,4 +78,4 @@ if __name__ == "__main__":
     activities = get_activities(token)
     print(activities)
     orders = get_orders(token)
-    print(orders)
+    print(orders) """
