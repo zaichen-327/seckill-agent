@@ -38,6 +38,22 @@ def get_activities(token):
         raise Exception("查活动失败：" + data["message"])
     return data["data"]
 
+def get_orders(token, activity_id = None, limit = 20):
+    """调 GET /ops/orders，返回订单列表"""
+    params = {"limit": limit}
+    if activity_id is not None:
+        params["activityId"] = activity_id
+    resp = requests.get(
+        f"{BASE_URL}/ops/orders",
+        headers={"Authorization": "Bearer " + token},
+        params=params,
+        timeout=10,
+    )
+    data = resp.json()
+    if data["code"] != 200:
+        raise Exception("查订单失败：" + data["message"])
+    return data["data"]
+
 if __name__ == "__main__":
     token = login("test1", "123456")
     print("登录成功，token 前 10 位：", token[:10])
@@ -45,3 +61,5 @@ if __name__ == "__main__":
     print(metrics)
     activities = get_activities(token)
     print(activities)
+    orders = get_orders(token)
+    print(orders)
