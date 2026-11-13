@@ -26,8 +26,22 @@ def get_metrics(token):
         raise Exception("查指标失败：" + data["message"])
     return data["data"]
 
+def get_activities(token):
+    """调 GET /ops/activities，返回活动列表"""
+    resp = requests.get(
+        f"{BASE_URL}/ops/activities",
+        headers={"Authorization": "Bearer " + token},
+        timeout=10,
+    )
+    data = resp.json()
+    if data["code"] != 200:
+        raise Exception("查活动失败：" + data["message"])
+    return data["data"]
+
 if __name__ == "__main__":
     token = login("test1", "123456")
     print("登录成功，token 前 10 位：", token[:10])
     metrics = get_metrics(token)
     print(metrics)
+    activities = get_activities(token)
+    print(activities)
