@@ -1,5 +1,13 @@
 from dotenv import load_dotenv
 load_dotenv()
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
+from opentelemetry.sdk.resources import Resource
+
+trace.set_tracer_provider(TracerProvider(resource=Resource.create({"service.name": "seckill-agent"})))
+trace.get_tracer_provider().add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+tracer = trace.get_tracer("seckill-agent")
 
 import json
 import os
@@ -86,11 +94,16 @@ def run_agent(question, token, messages):
     messages.append({"role": "user", "content": question})
         
     for step in range(5):
-        resp = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=messages,
-            tools=TOOLS,
-        )
+        with tracer.start_as_current_span("llm.call") as span:
+            resp = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=messages,
+                tools=TOOLS,
+            )
+            if resp.usage:
+                span.set_attribute("llm.usage.prompt_tokens", resp.usage.prompt_tokens)
+                span.set_attribute("llm.usage.completion_tokens", resp.usage.completion_tokens)
+                span.set_attribute("llm.usage.total_tokens", resp.usage.total_tokens)
         msg = resp.choices[0].message
         messages.append(msg)
 
@@ -102,10 +115,12 @@ def run_agent(question, token, messages):
             name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
             print(f"调用工具：{name}，参数：{args}")
-            try:
-                result = call_tool(name, args)
-            except Exception as e:
-                result = f"工具 {name} 调用失败：{e}"
+            with tracer.start_as_current_span(f"tool.call.{name}") as span:
+                try:
+                    result = call_tool(name, args)
+                except Exception as e:
+                    result = f"工具 {name} 调用失败：{e}"
+                    span.set_attribute("error", True)
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
@@ -131,4 +146,6 @@ if __name__ == "__main__":
             break
         if not question.strip():
             continue
-        run_agent(question, token, messages)
+        with tracer.start_as_current_span("agent.run") as span:
+            span.set_attribute("agent.question", question)
+            run_agent(question, token, messages)
