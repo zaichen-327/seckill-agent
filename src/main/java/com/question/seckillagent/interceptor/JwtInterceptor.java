@@ -30,6 +30,11 @@ public class JwtInterceptor implements HandlerInterceptor {
         try {
             Long userId = jwtUtil.getUserId(token);
             UserContext.setUserId(userId);
+            String role = jwtUtil.parseToken(token).get("role", String.class);
+            String uri = request.getRequestURI();
+            if (uri.startsWith("/ops/") && !"ADMIN".equals(role)){
+                throw new BusinessException("权限不足");
+            }
             return true;
         } catch (ExpiredJwtException e) {
             throw new BusinessException("登录已过期，请重新登录");

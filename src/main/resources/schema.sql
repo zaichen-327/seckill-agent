@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS seckill_user (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     password_hash VARCHAR(100) NOT NULL COMMENT 'BCrypt加密后的密码',
-    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER' COMMENT '角色: USER 普通用户, ADMIN 管理员'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO seckill_activity (id, name, product_id, original_price, seckill_price, initial_stock, available_stock, start_time, end_time)

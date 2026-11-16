@@ -39,6 +39,7 @@ public class UserServiceImpl implements UserService {
         SeckillUser user = new SeckillUser();
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
+        user.setRole("USER");
         seckillUserMapper.insert(user);
         log.info("用户注册成功，username={}", username);
     }
@@ -51,7 +52,7 @@ public class UserServiceImpl implements UserService {
         if(user == null || !passwordEncoder.matches(password, user.getPasswordHash())){
             throw new BusinessException("用户名或者密码错误");
         }
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         log.info("用户登录成功，username={}", username);
         return token;
     }
