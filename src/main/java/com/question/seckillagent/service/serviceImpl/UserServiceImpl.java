@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
@@ -45,15 +48,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String login(String username, String password) {
+    public Map<String, Object> login(String username, String password) {
         QueryWrapper<SeckillUser> wrapper = new QueryWrapper<>();
         wrapper.eq("username", username);
         SeckillUser user = seckillUserMapper.selectOne(wrapper);
-        if(user == null || !passwordEncoder.matches(password, user.getPasswordHash())){
-            throw new BusinessException("用户名或者密码错误");
+        if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new BusinessException("用户名或密码错误");
         }
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         log.info("用户登录成功，username={}", username);
-        return token;
+        Map<String, Object> data = new HashMap<>();
+        data.put("token", token);
+        data.put("role", user.getRole());
+        data.put("username", user.getUsername());
+        return data;
     }
 }

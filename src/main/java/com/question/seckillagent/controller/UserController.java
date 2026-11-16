@@ -7,6 +7,8 @@ import com.question.seckillagent.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/user")
 @Slf4j
@@ -26,9 +28,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public Result<String> login(@RequestBody UserLoginRequest request){
+    public Result<Map<String, Object>> login(@RequestBody UserLoginRequest request){
         log.info("用户登录请求，username={}", request.getUsername());
-        String token = userService.login(request.getUsername(), request.getPassword());
+        Map<String, Object> token = userService.login(request.getUsername(), request.getPassword());
         return Result.success(token);
     }
 }
