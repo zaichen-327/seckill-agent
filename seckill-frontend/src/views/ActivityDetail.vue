@@ -22,7 +22,7 @@
         <div v-if="step === 'captcha'">
           <p>请输入验证码：</p>
           <div class="captcha-box">
-            <img :src="'data:image/png;base64,' + captchaImage" alt="验证码" @click="startSeckill" title="看不清？点一下换一张" />
+            <img :src="captchaSrc" alt="验证码" @click="startSeckill" title="看不清？点一下换一张" />
             <input v-model="verifyCode" placeholder="验证码" />
             <button @click="getToken">确认</button>
           </div>
@@ -54,6 +54,14 @@ const step = ref('') // '' | 'captcha' | 'doing' | 'polling' | 'done'
 const captchaId = ref('')
 const captchaImage = ref('')
 const verifyCode = ref('')
+// 后端 easy-captcha 的 toBase64() 自带 "data:image/png;base64," 前缀，直接用就行；
+// 以前端再拼一遍前缀，地址就成了 data:image/png;base64,data:image/png;base64,...，图片就裂了。
+// 万一以后后端改成裸 base64，这里再补前缀，两种情况都兼容。
+const captchaSrc = computed(() => {
+  if (!captchaImage.value) return ''
+  if (captchaImage.value.startsWith('data:')) return captchaImage.value
+  return 'data:image/png;base64,' + captchaImage.value
+})
 const result = ref('')
 const now = ref(new Date())
 let timer = null
@@ -172,6 +180,13 @@ async function pollResult() {
     } else {
       result.value = r
       step.value = 'done'
+      // 出了最终结果，重新拉一遍活动，库存数字才会跟着变
+      // （不重拉的话，页面上还是秒杀前那份旧数据）
+      try {
+        activity.value = await getActivity(activityId)
+      } catch (e) {
+        // 拉失败也不影响结果展示
+      }
     }
   } catch (e) {
     result.value = '查询失败，请刷新重试'

@@ -17,11 +17,11 @@
       <aside v-if="showLayout" class="sidebar">
         <nav>
           <router-link to="/">📋 活动列表</router-link>
+          <router-link v-if="isAdmin" to="/admin/activities">🛠️ 活动管理</router-link>
           <router-link v-if="isAdmin" to="/ops">🤖 运维 Agent</router-link>
         </nav>
         <div class="side-bottom">
           <p>当前日期<br />{{ today }}</p>
-          <p>后端<br />localhost:8080</p>
         </div>
       </aside>
       <main class="main">

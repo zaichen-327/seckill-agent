@@ -4,13 +4,15 @@ import Register from '../views/Register.vue'
 import ActivityList from '../views/ActivityList.vue'
 import ActivityDetail from '../views/ActivityDetail.vue'
 import OpsChat from '../views/OpsChat.vue'
+import AdminActivities from '../views/AdminActivities.vue'
 
 const routes = [
   { path: '/', name: 'ActivityList', component: ActivityList },
   { path: '/login', name: 'Login', component: Login },
   { path: '/register', name: 'Register', component: Register },
   { path: '/activity/:id', name: 'ActivityDetail', component: ActivityDetail },
-  { path: '/ops', name: 'OpsChat', component: OpsChat, meta: { requireAdmin: true } }
+  { path: '/ops', name: 'OpsChat', component: OpsChat, meta: { requireAdmin: true } },
+  { path: '/admin/activities', name: 'AdminActivities', component: AdminActivities, meta: { requireAdmin: true } }
 ]
 
 const router = createRouter({

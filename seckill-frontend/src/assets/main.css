@@ -279,9 +279,27 @@ label { display: block; font-size: 14px; color: var(--text-light); margin: 12px 
 .input-row input { flex: 1; }
 .tip { font-size: 13px; color: var(--text-light); }
 
+/* ============ 活动管理（管理员） ============ */
+.admin-form h3 { margin: 0 0 8px; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+  margin-bottom: 16px;
+}
+.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-table th, .admin-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+.admin-table th { color: var(--text-light); font-weight: 600; white-space: nowrap; }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table .price { font-size: 16px; }
+.time-cell { font-size: 13px; color: var(--text-light); white-space: nowrap; }
+.btn-small { padding: 6px 12px; font-size: 13px; }
+.admin-form .tip { margin-top: 12px; }
+
 /* ============ 小屏幕适配 ============ */
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .search-box { max-width: none; }
+  .form-grid { grid-template-columns: 1fr; }
 }

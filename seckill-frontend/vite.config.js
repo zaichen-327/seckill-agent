@@ -14,7 +14,13 @@ export default defineConfig({
       '/seckill': 'http://localhost:8080',
       '/ops': 'http://localhost:8080',
       // Python Agent 服务（8000，切片 6 做好后才有）
-      '/agent': 'http://localhost:8000'
+      // 注意：FastAPI 里路由是 /chat，没有 /agent 前缀，所以代理要把 /agent 去掉再转发
+      // 不去掉的话，8000 收到的是 /agent/chat，找不到路由就报 404
+      '/agent': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/agent/, '')
+      }
     }
   }
 })

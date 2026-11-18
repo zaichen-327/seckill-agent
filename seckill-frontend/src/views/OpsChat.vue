@@ -15,7 +15,6 @@
         <button class="secondary" @click="newChat">新对话</button>
       </div>
     </div>
-    <p class="tip">注意：聊天功能要等 FastAPI 服务（agent_api.py，端口 8000）做好才能用。</p>
   </div>
 </template>
 
