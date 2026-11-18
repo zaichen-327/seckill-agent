@@ -12,7 +12,7 @@ def login(username, password):
     data = resp.json()
     if data["code"] != 200:
         raise Exception("登录失败：" + data["message"])
-    return data["data"]
+    return data["data"]["token"]
 
 def get_metrics(token):
     """调 GET /ops/metrics，返回指标字典"""

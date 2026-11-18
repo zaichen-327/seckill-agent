@@ -32,6 +32,7 @@ redisStock 为 null 的判断顺序：先看 redis.up（false→Redis 连通性�
 单个 null 先查订单数再下结论：有订单且库存扣到 0→可能是售罄后 key 被删；
 订单是 0→活动未预热（没发布过）。不许凭名字和 availableStock=0 就断定“确实卖完了”；
 库存 key 没设 TTL，不会过期。
+在查卖出去的订单数时，要调用工具找dbOrderCount的值，而不是自己去数订单数。
 """
 
 TOOLS = [
