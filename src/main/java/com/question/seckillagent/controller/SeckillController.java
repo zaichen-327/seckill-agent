@@ -2,10 +2,12 @@ package com.question.seckillagent.controller;
 
 import com.question.seckillagent.common.Result;
 import com.question.seckillagent.context.UserContext;
+import com.question.seckillagent.dto.MyOrderDTO;
 import com.question.seckillagent.service.SeckillService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -46,5 +48,13 @@ public class SeckillController {
         Long userId = UserContext.getUserId();
         log.info("查询秒杀结果，activityId={}，userId={}", activityId, userId);
         return Result.success(seckillService.getSeckillResult(activityId,userId));
+    }
+
+    @GetMapping("/orders/my")
+    public Result<List<MyOrderDTO>> listMyOrders() {
+        Long userId = UserContext.getUserId();
+        log.info("查询我的订单，userId={}", userId);
+        List<MyOrderDTO> orders = seckillService.listMyOrders(userId);
+        return Result.success(orders);
     }
 }

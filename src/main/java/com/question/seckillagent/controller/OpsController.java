@@ -2,7 +2,9 @@ package com.question.seckillagent.controller;
 
 import com.question.seckillagent.common.Result;
 import com.question.seckillagent.dto.ops.*;
+import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.service.OpsMetricsService;
+import com.question.seckillagent.service.SeckillActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import java.util.List;
 public class OpsController {
 
     private final OpsMetricsService opsMetricsService;
+    private final SeckillActivityService seckillActivityService;
 
     /**
      * 运维指标总览：Agent 巡检的"眼睛"，一次看清活动 / MQ / Redis 状态
@@ -47,5 +50,12 @@ public class OpsController {
             @RequestBody(required = false) OpsPublishRequest request){
         log.info("发布活动，activityId={}", activityId);
         return Result.success(opsMetricsService.publishActivity(activityId, request));
+    }
+
+    @PostMapping("/activities")
+    public Result<Void> createActivity(@RequestBody SeckillActivity activity) {
+        log.info("管理员创建秒杀活动，名字={}，商品ID={}", activity.getName(), activity.getProductId());
+        seckillActivityService.create(activity);
+        return Result.success();
     }
 }

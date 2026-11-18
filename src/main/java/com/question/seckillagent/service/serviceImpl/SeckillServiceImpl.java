@@ -2,6 +2,7 @@ package com.question.seckillagent.service.serviceImpl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.question.seckillagent.config.RabbitMQConfig;
+import com.question.seckillagent.dto.MyOrderDTO;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
 import com.question.seckillagent.exception.BusinessException;
@@ -190,6 +191,43 @@ public class SeckillServiceImpl implements SeckillService {
             return "排队中";
         }
         return "已售罄";
+    }
+
+    @Override
+    public List<MyOrderDTO> listMyOrders(Long userId) {
+        // 1. 查出这个用户的所有订单，按下单时间倒序
+        QueryWrapper<SeckillOrder> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId);
+        wrapper.orderByDesc("create_time");
+        List<SeckillOrder> orders = seckillOrderMapper.selectList(wrapper);
+
+        // 2. 把订单里的活动 id 收集起来，一次性查出所有活动
+        List<Long> activityIds = new ArrayList<>();
+        for (SeckillOrder order : orders) {
+            activityIds.add(order.getActivityId());
+        }
+        List<SeckillActivity> activities = seckillActivityMapper.selectBatchIds(activityIds);
+        Map<Long, SeckillActivity> activityMap = new HashMap<>();
+        for (SeckillActivity activity : activities) {
+            activityMap.put(activity.getId(), activity);
+        }
+
+        // 3. 把订单和活动名拼成 DTO
+        List<MyOrderDTO> result = new ArrayList<>();
+        for (SeckillOrder order : orders) {
+            MyOrderDTO dto = new MyOrderDTO();
+            dto.setOrderId(order.getId());
+            dto.setActivityId(order.getActivityId());
+            SeckillActivity activity = activityMap.get(order.getActivityId());
+            if (activity != null) {
+                dto.setActivityName(activity.getName());
+            } else {
+                dto.setActivityName("活动已删除");
+            }
+            dto.setCreateTime(order.getCreateTime());
+            result.add(dto);
+        }
+        return result;
     }
 
     private SeckillActivity getActivityOrThrow(Long activityId){

@@ -1,5 +1,8 @@
 package com.question.seckillagent.service;
 
+import com.question.seckillagent.dto.MyOrderDTO;
+
+import java.util.List;
 import java.util.Map;
 
 public interface SeckillService {
@@ -12,4 +15,6 @@ public interface SeckillService {
     void doSeckill(Long activityId, String token, Long userId);
 
     String getSeckillResult(Long activityId, Long userId);
+
+    List<MyOrderDTO> listMyOrders(Long userId);
 }

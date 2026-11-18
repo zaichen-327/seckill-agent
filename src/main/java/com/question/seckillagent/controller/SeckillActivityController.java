@@ -32,7 +32,7 @@ public class SeckillActivityController {
         return Result.success(seckillActivityService.getById(id));
     }
 
-    @PostMapping
+    /*@PostMapping
     public Result<Void> create(@RequestBody SeckillActivity activity){
         log.info("创建秒杀活动，名字={}，商品ID={}", activity.getName(), activity.getProductId());
         seckillActivityService.create(activity);
@@ -44,5 +44,5 @@ public class SeckillActivityController {
         log.info("发布秒杀活动，预热库存：ID={}", id);
         seckillActivityService.publish(id);
         return Result.success();
-    }
+    }*/
 }
