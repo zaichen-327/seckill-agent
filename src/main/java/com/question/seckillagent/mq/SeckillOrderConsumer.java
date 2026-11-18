@@ -1,8 +1,11 @@
 package com.question.seckillagent.mq;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.question.seckillagent.config.RabbitMQConfig;
+import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
+import com.question.seckillagent.mapper.SeckillActivityMapper;
 import com.question.seckillagent.mapper.SeckillOrderMapper;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +25,15 @@ public class SeckillOrderConsumer {
     private final SeckillOrderMapper seckillOrderMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final SeckillActivityMapper seckillActivityMapper;
 
     public SeckillOrderConsumer(SeckillOrderMapper seckillOrderMapper,
                                 StringRedisTemplate stringRedisTemplate,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper, SeckillActivityMapper seckillActivityMapper) {
         this.seckillOrderMapper = seckillOrderMapper;
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = objectMapper;
+        this.seckillActivityMapper = seckillActivityMapper;
     }
 
     @RabbitListener(queues = RabbitMQConfig.ORDER_QUEUE)
@@ -49,6 +54,9 @@ public class SeckillOrderConsumer {
             order.setActivityId(seckillMessage.getActivityId());
             order.setUserId(seckillMessage.getUserId());
             seckillOrderMapper.insert(order);
+            seckillActivityMapper.update(null, new UpdateWrapper<SeckillActivity>()
+                    .eq("id", seckillMessage.getActivityId())
+                    .setSql("available_stock = available_stock - 1"));
             channel.basicAck(deliveryTag, false);
             log.info("订单落库成功，activityId={}，userId={}",
                     seckillMessage.getActivityId(), seckillMessage.getUserId());
