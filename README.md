@@ -37,6 +37,11 @@
 > - 订单状态：`PENDING_PAYMENT` / `PAID` / `COMPLETED` / `CANCELLED` / `REFUNDED`。
 > - 已有库升级先执行 `docs/migrations/20261123_add_order_status.sql`。
 >
+> ## 审计日志
+>
+> 写操作统一记录到 `audit_log`：actor、action、target、before/after JSON。
+> 已有库执行 `docs/migrations/20261123_add_audit_log.sql`。
+>
 > ## 运维 Agent 工具接口
 >
 > Agent 通过 HTTP 调用以下接口做运维排障（均走 JWT 鉴权）：

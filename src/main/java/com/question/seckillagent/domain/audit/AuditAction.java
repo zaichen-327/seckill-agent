@@ -1,0 +1,15 @@
+package com.question.seckillagent.domain.audit;
+
+public enum AuditAction {
+    ORDER_CREATED,
+    ORDER_PAID,
+    ORDER_CANCELLED,
+    ORDER_REFUNDED,
+    INVENTORY_RESERVED,
+    INVENTORY_CONFIRMED,
+    INVENTORY_RELEASED,
+    INVENTORY_ADJUSTED,
+    ACTIVITY_SUBMITTED,
+    ACTIVITY_APPROVED,
+    ACTIVITY_PUBLISHED
+}
