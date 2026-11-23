@@ -34,6 +34,8 @@
 > - 必须携带 JWT，只返回当前登录用户的订单。
 > - `activityId` 可选；`limit` 默认 20，最大 50。
 > - 活动名批量查询，避免 N+1；没有订单时直接返回空列表。
+> - 订单状态：`PENDING_PAYMENT` / `PAID` / `COMPLETED` / `CANCELLED` / `REFUNDED`。
+> - 已有库升级先执行 `docs/migrations/20261123_add_order_status.sql`。
 >
 > ## 运维 Agent 工具接口
 >

@@ -21,9 +21,11 @@ CREATE TABLE IF NOT EXISTS seckill_order (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     activity_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PENDING_PAYMENT' COMMENT '订单状态',
     create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     # 避免联合索引时，会因为找不到而查找全表，通过使用维护索引的微小成本来降低大批量sql的请求
     KEY 'idx_activity_id' ('activity_id'),
+    KEY idx_order_status_create_time (status, create_time),
     UNIQUE KEY uk_user_activity (user_id, activity_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

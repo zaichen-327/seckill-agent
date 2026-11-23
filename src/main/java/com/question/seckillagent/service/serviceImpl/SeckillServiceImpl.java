@@ -2,6 +2,7 @@ package com.question.seckillagent.service.serviceImpl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.question.seckillagent.config.RabbitMQConfig;
+import com.question.seckillagent.domain.order.OrderStatus;
 import com.question.seckillagent.dto.MyOrderDTO;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
@@ -228,6 +229,9 @@ public class SeckillServiceImpl implements SeckillService {
             MyOrderDTO dto = new MyOrderDTO();
             dto.setOrderId(order.getId());
             dto.setActivityId(order.getActivityId());
+            OrderStatus status = order.getStatus() == null ? OrderStatus.COMPLETED : order.getStatus();
+            dto.setStatus(status);
+            dto.setStatusLabel(status.getLabel());
             SeckillActivity activity = activityMap.get(order.getActivityId());
             if (activity != null) {
                 dto.setActivityName(activity.getName());

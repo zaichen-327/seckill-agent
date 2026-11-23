@@ -3,6 +3,7 @@ package com.question.seckillagent.mq;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.question.seckillagent.config.RabbitMQConfig;
+import com.question.seckillagent.domain.order.OrderStatus;
 import com.question.seckillagent.entity.SeckillActivity;
 import com.question.seckillagent.entity.SeckillOrder;
 import com.question.seckillagent.mapper.SeckillActivityMapper;
@@ -53,6 +54,7 @@ public class SeckillOrderConsumer {
             SeckillOrder order = new SeckillOrder();
             order.setActivityId(seckillMessage.getActivityId());
             order.setUserId(seckillMessage.getUserId());
+            order.setStatus(OrderStatus.PENDING_PAYMENT);
             seckillOrderMapper.insert(order);
             seckillActivityMapper.update(null, new UpdateWrapper<SeckillActivity>()
                     .eq("id", seckillMessage.getActivityId())
