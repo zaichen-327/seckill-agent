@@ -51,10 +51,12 @@ public class SeckillController {
     }
 
     @GetMapping("/orders/my")
-    public Result<List<MyOrderDTO>> listMyOrders() {
+    public Result<List<MyOrderDTO>> listMyOrders(
+            @RequestParam(required = false) Long activityId,
+            @RequestParam(required = false) Integer limit) {
         Long userId = UserContext.getUserId();
-        log.info("查询我的订单，userId={}", userId);
-        List<MyOrderDTO> orders = seckillService.listMyOrders(userId);
+        log.info("查询我的订单，userId={}，activityId={}，limit={}", userId, activityId, limit);
+        List<MyOrderDTO> orders = seckillService.listMyOrders(userId, activityId, limit);
         return Result.success(orders);
     }
 }

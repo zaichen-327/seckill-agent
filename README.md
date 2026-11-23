@@ -27,6 +27,14 @@
 >
 > - JMeter 压测峰值 **440 QPS（核心链路，不含验证码和 token 发放），0 超卖**。
 >
+> ## 用户订单查询
+>
+> `GET /seckill/orders/my?activityId=&limit=20`
+>
+> - 必须携带 JWT，只返回当前登录用户的订单。
+> - `activityId` 可选；`limit` 默认 20，最大 50。
+> - 活动名批量查询，避免 N+1；没有订单时直接返回空列表。
+>
 > ## 运维 Agent 工具接口
 >
 > Agent 通过 HTTP 调用以下接口做运维排障（均走 JWT 鉴权）：

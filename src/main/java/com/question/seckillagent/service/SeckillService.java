@@ -16,5 +16,5 @@ public interface SeckillService {
 
     String getSeckillResult(Long activityId, Long userId);
 
-    List<MyOrderDTO> listMyOrders(Long userId);
+    List<MyOrderDTO> listMyOrders(Long userId, Long activityId, Integer limit);
 }

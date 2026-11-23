@@ -194,15 +194,25 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
     @Override
-    public List<MyOrderDTO> listMyOrders(Long userId) {
-        // 1. 查出这个用户的所有订单，按下单时间倒序
+    public List<MyOrderDTO> listMyOrders(Long userId, Long activityId, Integer limit) {
+        int safeLimit = normalizeLimit(limit);
+        // 1. 只查当前用户；可选按活动过滤，避免把全部订单拉回来
         QueryWrapper<SeckillOrder> wrapper = new QueryWrapper<>();
         wrapper.eq("user_id", userId);
+        if (activityId != null) {
+            wrapper.eq("activity_id", activityId);
+        }
         wrapper.orderByDesc("create_time");
+        wrapper.last("LIMIT " + safeLimit);
         List<SeckillOrder> orders = seckillOrderMapper.selectList(wrapper);
 
-        // 2. 把订单里的活动 id 收集起来，一次性查出所有活动
-        List<Long> activityIds = new ArrayList<>();
+        // 2. 没有订单直接返回，避免 selectBatchIds 收到空集合
+        if (orders.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 3. 活动 id 去重后一次批量查，避免 N+1
+        Set<Long> activityIds = new LinkedHashSet<>();
         for (SeckillOrder order : orders) {
             activityIds.add(order.getActivityId());
         }
@@ -212,7 +222,7 @@ public class SeckillServiceImpl implements SeckillService {
             activityMap.put(activity.getId(), activity);
         }
 
-        // 3. 把订单和活动名拼成 DTO
+        // 4. 把订单和活动名拼成 DTO
         List<MyOrderDTO> result = new ArrayList<>();
         for (SeckillOrder order : orders) {
             MyOrderDTO dto = new MyOrderDTO();
@@ -228,6 +238,14 @@ public class SeckillServiceImpl implements SeckillService {
             result.add(dto);
         }
         return result;
+    }
+
+    // 进行兜底，默认20条，最多50条订单
+    static int normalizeLimit(Integer limit) {
+        if (limit == null || limit <= 0) {
+            return 20;
+        }
+        return Math.min(limit, 50);
     }
 
     private SeckillActivity getActivityOrThrow(Long activityId){
