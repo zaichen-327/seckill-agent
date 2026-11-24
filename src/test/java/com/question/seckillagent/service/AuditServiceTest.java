@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.question.seckillagent.domain.audit.AuditAction;
 import com.question.seckillagent.entity.AuditLog;
 import com.question.seckillagent.mapper.AuditLogMapper;
+import com.question.seckillagent.service.serviceImpl.AuditServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -19,7 +20,7 @@ class AuditServiceTest {
     @Test
     void recordWritesActorActionTargetAndJson() {
         AuditLogMapper mapper = mock(AuditLogMapper.class);
-        AuditService auditService = new AuditService(mapper, new ObjectMapper());
+        AuditService auditService = new AuditServiceImpl(mapper, new ObjectMapper());
 
         auditService.record(7L, "USER", AuditAction.ORDER_CREATED, "ORDER", 100L,
                 null, Map.of("status", "PENDING_PAYMENT"));
